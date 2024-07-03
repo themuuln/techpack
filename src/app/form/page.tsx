@@ -36,6 +36,7 @@ export default function Home() {
     const savedStep = localStorage.getItem('currentStep');
     return savedStep ? parseInt(savedStep, 10) : StepEnums.PERSONAL_INFO;
   });
+  const [confirmed, setConfirmed] = useState<boolean>(false);
 
   const {
     register: registerPersonalInfo,
@@ -57,6 +58,14 @@ export default function Home() {
       duration: 'Monthly',
     },
   });
+
+  useEffect(() => {
+    saveStateToLocalStorage(data);
+  }, [data]);
+
+  useEffect(() => {
+    localStorage.setItem('currentStep', currentStep.toString());
+  }, [currentStep]);
 
   const onSubmit = async (formData: TPersonalInfoSchema | TPlanSchema | TAddonsSchema) => {
     switch (currentStep) {
@@ -86,21 +95,26 @@ export default function Home() {
           console.error(error);
         }
         break;
-      // Add case for SUMMARY if needed
+      case StepEnums.SUMMARY:
+        try {
+          // @ts-ignore
+          setData({ ...data, ...(formData as TAddonsSchema) });
+          setConfirmed(true);
+        } catch (error) {
+          console.error(error);
+        }
+        break;
     }
+  };
+
+  const onGoBack = () => {
+    console.log(currentStep);
+    setCurrentStep((prevState) => prevState - 1);
   };
 
   const saveStateToLocalStorage = (state: Data) => {
     localStorage.setItem('formData', JSON.stringify(state));
   };
-
-  useEffect(() => {
-    saveStateToLocalStorage(data);
-  }, [data]);
-
-  useEffect(() => {
-    localStorage.setItem('currentStep', currentStep.toString());
-  }, [currentStep]);
 
   return (
     <>
@@ -109,6 +123,7 @@ export default function Home() {
         className='flex flex-col w-full gap-y-2'
       >
         <main className='min-h-screen md:flex md:flex-row md:justify-center md:items-center bg-[#eef5ff] text-black'>
+          {/* For Mobile */}
           <div className='w-full md:hidden pb-8 md:pb-0 md:w-[246px] pl-7 pt-9 bg-background '>
             <div className='flex flex-row justify-center space-x-4 md:space-x-0 md:flex-col md:space-y-6'>
               {stepData.map((step, index) => {
@@ -119,6 +134,7 @@ export default function Home() {
 
           <div className='container flex flex-col md:flex-row bg-white  md:max-w-[848px] md:min-h-[542px] rounded-2xl'>
             {/* Navigation bar */}
+            {/* For Tablet+ */}
             <div className='hidden md:block w-full pb-8 md:pb-0 md:w-[246px] pl-7 md:m-3 pt-9 bg-background md:rounded-xl'>
               <div className='flex flex-row justify-center space-x-4 md:space-x-0 md:flex-col md:space-y-6'>
                 {stepData.map((step, index) => {
@@ -269,10 +285,11 @@ export default function Home() {
                 <></>
               )}
 
+              {/* For Tablet+ */}
               <div className='hidden md:block'>
                 <NavigationButtons
                   hideGoBack={currentStep === StepEnums.PERSONAL_INFO}
-                  onGoBack={() => setCurrentStep((prev) => prev - 1)}
+                  onGoBack={onGoBack}
                   isDisabled={isSubmittingPersonalInfo || isSubmittingPlan}
                   submitText={currentStep === StepEnums.SUMMARY ? 'Confirm' : 'Next Step'}
                 />
@@ -280,10 +297,11 @@ export default function Home() {
             </div>
           </div>
 
+          {/* For Mobile */}
           <div className='absolute bottom-0 block w-full h-20 bg-white md:hidden'>
             <NavigationButtons
               hideGoBack={currentStep === StepEnums.PERSONAL_INFO}
-              onGoBack={() => setCurrentStep((prev) => prev - 1)}
+              onGoBack={onGoBack}
               isDisabled={isSubmittingPersonalInfo || isSubmittingPlan}
               submitText={currentStep === StepEnums.SUMMARY ? 'Confirm' : 'Next Step'}
             />
