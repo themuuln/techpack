@@ -12,30 +12,22 @@ import { useForm } from 'react-hook-form';
 import { personalInfoSchema, planSchema, type TAddonsSchema, type TPersonalInfoSchema, type TPlanSchema } from '../../lib/types';
 import { addOns, formData, planData, stepData } from './data';
 import { StepEnums, type Data } from './types';
-
-const loadStateFromLocalStorage = (): Data | null => {
-  const savedState = localStorage.getItem('formData');
-  return savedState ? JSON.parse(savedState) : null;
-};
+import Image from 'next/image';
+import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 
 export default function Home() {
-  const [data, setData] = useState<Data>(() => {
-    const savedState = loadStateFromLocalStorage();
-    return (
-      savedState || {
-        name: '',
-        email: '',
-        phoneNumber: '',
-        plan: planData[0],
-        addons: [],
-        duration: 'Monthly',
-      }
-    );
-  });
-  const [currentStep, setCurrentStep] = useState<number>(() => {
-    const savedStep = localStorage.getItem('currentStep');
-    return savedStep ? parseInt(savedStep, 10) : StepEnums.PERSONAL_INFO;
-  });
+  const [data, setData] = useState<Data>(() =>
+    getLocalStorage('formData', {
+      name: '',
+      email: '',
+      phoneNumber: '',
+      plan: planData[0],
+      addons: [],
+      duration: 'Monthly',
+    }),
+  );
+  const [currentStep, setCurrentStep] = useState<number>(() => getLocalStorage('currentStep', StepEnums.PERSONAL_INFO));
+
   const [confirmed, setConfirmed] = useState<boolean>(false);
 
   const {
@@ -60,11 +52,11 @@ export default function Home() {
   });
 
   useEffect(() => {
-    saveStateToLocalStorage(data);
+    setLocalStorage('formData', data);
   }, [data]);
 
   useEffect(() => {
-    localStorage.setItem('currentStep', currentStep.toString());
+    setLocalStorage('currentStep', currentStep);
   }, [currentStep]);
 
   const onSubmit = async (formData: TPersonalInfoSchema | TPlanSchema | TAddonsSchema) => {
@@ -112,10 +104,6 @@ export default function Home() {
     setCurrentStep((prevState) => prevState - 1);
   };
 
-  const saveStateToLocalStorage = (state: Data) => {
-    localStorage.setItem('formData', JSON.stringify(state));
-  };
-
   return (
     <>
       <form
@@ -145,7 +133,7 @@ export default function Home() {
 
             {/* Main Form */}
             <div className='relative px-6 mx-auto mb-8 md:px-0 space-y-9 mt-14'>
-              <SectionHeader step={currentStep} />
+              {!confirmed && <SectionHeader step={currentStep} />}
 
               {currentStep === StepEnums.PERSONAL_INFO ? (
                 <>
@@ -193,15 +181,17 @@ export default function Home() {
                       );
                     })}
                   </div>
-                  <DurationSelector
-                    value={data.duration}
-                    onSwitch={(checked) => {
-                      const newDuration = checked ? 'Yearly' : 'Monthly';
-                      setData({ ...data, duration: newDuration });
-                      setValuePlan('duration', newDuration);
-                    }}
-                    setValue={setValuePlan}
-                  />
+                  <div className='pb-10'>
+                    <DurationSelector
+                      value={data.duration}
+                      onSwitch={(checked) => {
+                        const newDuration = checked ? 'Yearly' : 'Monthly';
+                        setData({ ...data, duration: newDuration });
+                        setValuePlan('duration', newDuration);
+                      }}
+                      setValue={setValuePlan}
+                    />
+                  </div>
                   {errorsPlan.plan && <p className='text-sm font-semibold text-red-500'>{errorsPlan.plan.message}</p>}
                   {errorsPlan.duration && <p className='text-sm font-semibold text-red-500'>{errorsPlan.duration.message}</p>}
                 </>
@@ -238,48 +228,66 @@ export default function Home() {
                 </>
               ) : currentStep === StepEnums.SUMMARY ? (
                 <>
-                  {/* SUMMARY */}
-                  <div className='flex space-y-4 md:space-y-6 flex-col rounded-lg bg-field md:w-[448px] pb-7 pt-5 px-6'>
-                    <div className='flex items-center justify-between'>
-                      <div>
-                        <div className='text-xl font-bold text-primary'>
-                          {data?.plan?.name} ({data?.duration})
+                  {confirmed ? (
+                    <div className='flex flex-col items-center justify-center h-full space-y-8 '>
+                      <div className='w-20 bg-[#F87D88] rounded-full p-4 h-20'>
+                        <Image src='/icon/correct.svg' alt='correct' width={169} height={169} />
+                      </div>
+                      <div className='md:max-w-[448px] space-y-6'>
+                        <h2 className='font-bold text-center'>Thank you!</h2>
+
+                        <p className='text-center text-muted'>
+                          Thanks for confirming your subscription! We hope you have fun using our platform. If you ever need support, please feel free
+                          to email us at support@loremgaming.com.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* SUMMARY */}
+                      <div className='flex space-y-4 md:space-y-6 flex-col rounded-lg bg-field md:w-[448px] pb-7 pt-5 px-6'>
+                        <div className='flex items-center justify-between'>
+                          <div>
+                            <div className='text-xl font-bold text-primary'>
+                              {data?.plan?.name} ({data?.duration})
+                            </div>
+                            <div
+                              onClick={() => {
+                                setCurrentStep(StepEnums.PLAN);
+                              }}
+                              className='underline cursor-pointer hover:text-background text-muted'
+                            >
+                              Change
+                            </div>
+                          </div>
+                          <div className='font-bold text-primary'>{calcPrice(data?.plan?.price, data?.duration)}</div>
                         </div>
-                        <div
-                          onClick={() => {
-                            setCurrentStep(StepEnums.PLAN);
-                          }}
-                          className='underline cursor-pointer text-muted'
-                        >
-                          Change
+
+                        {data?.addons.length > 0 ? <hr className='h-[1px] border-[#9B9BA3]' /> : <></>}
+
+                        {data?.addons?.map((item, index) => {
+                          return (
+                            <div key={index} className='flex items-center justify-between'>
+                              <div className='text-muted'>{item.title}</div>
+                              <div className='font-medium text-primary'>+{calcPrice(item?.price, data?.duration)}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className='flex items-center justify-between px-6 md:pb-11'>
+                        <div className='text-muted'>Total (per {data?.duration === 'Yearly' ? 'year' : 'month'})</div>
+                        <div className='text-lg font-bold text-background'>
+                          $
+                          {(data?.duration === 'Yearly' ? data?.plan?.price * 10 : data?.plan?.price) +
+                            (data?.duration === 'Yearly'
+                              ? data?.addons?.reduce((acc, item) => acc + item.price * 10, 0)
+                              : data?.addons?.reduce((acc, item) => acc + item.price, 0))}
+                          /{data?.duration === 'Yearly' ? 'yr' : 'mo'}
                         </div>
                       </div>
-                      <div className='font-bold text-primary'>{calcPrice(data?.plan?.price, data?.duration)}</div>
-                    </div>
-
-                    {data?.addons.length > 0 ? <hr className='h-[1px] border-[#9B9BA3]' /> : <></>}
-
-                    {data?.addons?.map((item, index) => {
-                      return (
-                        <div key={index} className='flex items-center justify-between'>
-                          <div className='text-muted'>{item.title}</div>
-                          <div className='font-medium text-primary'>+{calcPrice(item?.price, data?.duration)}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className='flex items-center justify-between px-6 md:pb-11'>
-                    <div className='text-muted'>Total (per {data?.duration === 'Yearly' ? 'year' : 'month'})</div>
-                    <div className='text-lg font-bold text-background'>
-                      $
-                      {(data?.duration === 'Yearly' ? data?.plan?.price * 10 : data?.plan?.price) +
-                        (data?.duration === 'Yearly'
-                          ? data?.addons?.reduce((acc, item) => acc + item.price * 10, 0)
-                          : data?.addons?.reduce((acc, item) => acc + item.price, 0))}
-                      /{data?.duration === 'Yearly' ? 'yr' : 'mo'}
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </>
               ) : (
                 <></>
@@ -287,24 +295,32 @@ export default function Home() {
 
               {/* For Tablet+ */}
               <div className='hidden md:block'>
-                <NavigationButtons
-                  hideGoBack={currentStep === StepEnums.PERSONAL_INFO}
-                  onGoBack={onGoBack}
-                  isDisabled={isSubmittingPersonalInfo || isSubmittingPlan}
-                  submitText={currentStep === StepEnums.SUMMARY ? 'Confirm' : 'Next Step'}
-                />
+                {!confirmed ? (
+                  <NavigationButtons
+                    hideGoBack={currentStep === StepEnums.PERSONAL_INFO}
+                    onGoBack={onGoBack}
+                    isDisabled={isSubmittingPersonalInfo || isSubmittingPlan}
+                    submitText={currentStep === StepEnums.SUMMARY ? 'Confirm' : 'Next Step'}
+                  />
+                ) : (
+                  <></>
+                )}
               </div>
             </div>
           </div>
 
           {/* For Mobile */}
           <div className='absolute bottom-0 block w-full h-20 bg-white md:hidden'>
-            <NavigationButtons
-              hideGoBack={currentStep === StepEnums.PERSONAL_INFO}
-              onGoBack={onGoBack}
-              isDisabled={isSubmittingPersonalInfo || isSubmittingPlan}
-              submitText={currentStep === StepEnums.SUMMARY ? 'Confirm' : 'Next Step'}
-            />
+            {!confirmed ? (
+              <NavigationButtons
+                hideGoBack={currentStep === StepEnums.PERSONAL_INFO}
+                onGoBack={onGoBack}
+                isDisabled={isSubmittingPersonalInfo || isSubmittingPlan}
+                submitText={currentStep === StepEnums.SUMMARY ? 'Confirm' : 'Next Step'}
+              />
+            ) : (
+              <></>
+            )}
           </div>
         </main>
       </form>
