@@ -11,6 +11,7 @@ const NavigationButtons = ({ hideGoBack = false, onGoBack, isDisabled, submitTex
     <div className='flex flex-row justify-between'>
       {!hideGoBack ? (
         <button
+          type='button'
           disabled={isDisabled}
           onClick={onGoBack}
           className='absolute flex items-center justify-center px-6 py-4 font-semibold rounded-lg md:bottom-0 md:left-0 bottom-4 left-4 hover:underline h-11 text-muted'
