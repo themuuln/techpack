@@ -108,9 +108,9 @@ export default function Home() {
     <>
       <form
         onSubmit={currentStep === StepEnums.PERSONAL_INFO ? handleSubmitPersonalInfo(onSubmit) : handleSubmitPlan(onSubmit)}
-        className='min-h-screen w-full'
+        className='min-h-screen pb-44 w-full'
       >
-        <main className='min-h-screen md:flex md:flex-row md:justify-center md:items-center bg-[#eef5ff] text-black'>
+        <main className='min-h-screen md:flex md:flex-row md:justify-center md:items-center text-black'>
           {/* For Mobile */}
           <div className='w-full h-[172px] md:hidden pb-8 md:pb-0 md:w-[246px] pl-7 pt-8 md:pt-9 bg-background '>
             <div className='flex flex-row justify-center mr-6 space-x-4 md:space-x-0 md:flex-col md:space-y-6'>
@@ -310,7 +310,7 @@ export default function Home() {
           </div>
 
           {/* For Mobile */}
-          <div className='absolute bottom-0 block w-full h-20 bg-white md:hidden'>
+          <div className='fixed bottom-0 block w-full h-20 bg-white md:hidden'>
             {!confirmed ? (
               <NavigationButtons
                 isLoading={isSubmittingPersonalInfo || isSubmittingPlan}
