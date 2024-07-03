@@ -63,7 +63,7 @@ export default function Home() {
     switch (currentStep) {
       case StepEnums.PERSONAL_INFO:
         try {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 100));
           setData({ ...data, ...(formData as TPersonalInfoSchema) });
           setCurrentStep((prev) => prev + 1);
         } catch (error) {
@@ -112,7 +112,7 @@ export default function Home() {
       >
         <main className='min-h-screen md:flex md:flex-row md:justify-center md:items-center bg-[#eef5ff] text-black'>
           {/* For Mobile */}
-          <div className='w-full md:hidden pb-8 md:pb-0 md:w-[246px] pl-7 pt-9 bg-background '>
+          <div className='w-full h-[172px] md:hidden pb-8 md:pb-0 md:w-[246px] pl-7 pt-8 md:pt-9 bg-background '>
             <div className='flex flex-row justify-center space-x-4 md:space-x-0 md:flex-col md:space-y-6'>
               {stepData.map((step, index) => {
                 return <Step key={step?.id} onClick={(id) => setCurrentStep(id)} item={step} isActive={index === currentStep} />;
@@ -120,7 +120,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className='container flex flex-col md:flex-row bg-white  md:max-w-[848px] md:min-h-[542px] rounded-2xl'>
+          <div className='container flex flex-col md:flex-row bg-white absolute w-[calc(100vw-32px)] top-[100px] mx-4 md:max-w-[848px] md:min-h-[542px] rounded-2xl'>
             {/* Navigation bar */}
             {/* For Tablet+ */}
             <div className='hidden md:block w-full pb-8 md:pb-0 md:w-[246px] pl-7 md:m-3 pt-9 bg-background md:rounded-xl'>
@@ -313,6 +313,7 @@ export default function Home() {
           <div className='absolute bottom-0 block w-full h-20 bg-white md:hidden'>
             {!confirmed ? (
               <NavigationButtons
+                isLoading={isSubmittingPersonalInfo || isSubmittingPlan}
                 hideGoBack={currentStep === StepEnums.PERSONAL_INFO}
                 onGoBack={onGoBack}
                 isDisabled={isSubmittingPersonalInfo || isSubmittingPlan}
