@@ -113,7 +113,7 @@ export default function Home() {
         <main className='min-h-screen md:flex md:flex-row md:justify-center md:items-center bg-[#eef5ff] text-black'>
           {/* For Mobile */}
           <div className='w-full h-[172px] md:hidden pb-8 md:pb-0 md:w-[246px] pl-7 pt-8 md:pt-9 bg-background '>
-            <div className='flex flex-row justify-center space-x-4 md:space-x-0 md:flex-col md:space-y-6'>
+            <div className='flex flex-row justify-center mr-6 space-x-4 md:space-x-0 md:flex-col md:space-y-6'>
               {stepData.map((step, index) => {
                 return <Step key={step?.id} onClick={(id) => setCurrentStep(id)} item={step} isActive={index === currentStep} />;
               })}
