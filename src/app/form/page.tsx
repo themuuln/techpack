@@ -108,7 +108,7 @@ export default function Home() {
     <>
       <form
         onSubmit={currentStep === StepEnums.PERSONAL_INFO ? handleSubmitPersonalInfo(onSubmit) : handleSubmitPlan(onSubmit)}
-        className='flex flex-col w-full gap-y-2'
+        className='min-h-screen w-full'
       >
         <main className='min-h-screen md:flex md:flex-row md:justify-center md:items-center bg-[#eef5ff] text-black'>
           {/* For Mobile */}
